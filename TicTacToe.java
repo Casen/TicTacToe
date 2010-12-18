@@ -41,6 +41,8 @@ public static void main ( String [] args )
 	
     while (!(t1000.hasEnded())) {
 		t1000.print();
+		System.out.println("Looked " + (t1000.maxDepth - (t1000.level-1)) + " moves ahead.");
+		System.out.println("Total Pruned " + (t1000.pruned.size()) + " nodes.");
 		System.out.print("Your Move: ");
 		String c = input.nextLine();
 		while(!t1000.open(c)) {

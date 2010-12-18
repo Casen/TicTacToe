@@ -10,12 +10,13 @@ import java.util.*;
 public class TerminatorTwo {
 //------------------------------------------------------------------------------
 
-	public int numTrans = 0;
+	public int maxDepth = 1;
 	protected int level, timeAllowed;
 	protected double startTime;
 	protected GameBoardTwo presentState, initialState;
 	protected Evaluator eval = new Evaluator();
-	public ArrayList<GameBoardTwo> transpositions = new ArrayList<GameBoardTwo>();
+	//public ArrayList<GameBoardTwo> transpositions = new ArrayList<GameBoardTwo>();
+	public ArrayList<GameBoardTwo> pruned = new ArrayList<GameBoardTwo>();
 	static final String[] letters = {"A", "B", "C", "D", "E", "F", "G", "H"};
 	static final int[] centerGrid = {18,19,20,21,26,27,28,29,34,35,36,37,42,43,44,45};
 	static final int[] minusPerimeter = {9,10,11,12,13,14,17,18,19,20,21,22,25,26,27,28,29,30,33,34,35,36,37,38,41,42,43,44,45,46,49,50,51,52,53,54};
@@ -93,15 +94,25 @@ public class TerminatorTwo {
 			level++;
 		}
 		else {
-			// depth-limited search which looks 5 moves ahead (6-ply)
-			getAlphaBetaValue(getState(), 5);
-			nextState = (GameBoardTwo) getState().getSuccessor();
-			if (nextState == null) {
-				throw new RuntimeException("Alpha Beta Move failed");
+			// Iterative Deepening search
+			for(int i=1; i<64; i+=2) {
+				getAlphaBetaValue(getState(), i);
+				nextState = (GameBoardTwo) getState().getSuccessor();
+				if (nextState == null) {
+					throw new RuntimeException("Alpha Beta Move failed");
+				}
 			}
+			
 
 			presentState = new GameBoardTwo(nextState);
 			level++;
+		}
+		int c = 0;
+		while(!cutoffTest() && c<pruned.size()) {
+			if(pruned.get(c).depth < level) {
+				pruned.remove(c);
+			}
+			c++;
 		}
 		
 	}
@@ -130,6 +141,7 @@ public class TerminatorTwo {
 					state.addSuccessor(successor);
 				}
 				if (v <= alpha) {
+					pruned.add(state);
 					return v;
 				}
 				beta = Math.min(beta, v);
@@ -153,6 +165,7 @@ public class TerminatorTwo {
 					state.addSuccessor(successor);
 				}
 				if (v >= beta) {
+					pruned.add(state);
 					return v;
 				}
 				alpha = Math.max(alpha, v);
@@ -199,18 +212,15 @@ public class TerminatorTwo {
 		ArrayList<GameBoardTwo> successors = new ArrayList<GameBoardTwo>();
 		int player = getPlayerToMove(s);
 		int move = s.lastMovePlayed;	
-		transpositions.add(s);
-		
+		//transpositions.add(s);
+		maxDepth = Math.max(maxDepth, s.depth);
 		// if a move is close to the center, ignore searching the perimeter for successors
 		if(inCenter(move) && level < 16) {
 			for(int i=0; i<36; i++) {
 				if(s.board[minusPerimeter[i]] == 0) {
 					GameBoardTwo temp = new GameBoardTwo(s,player,minusPerimeter[i]);
-					if(!transpositions.contains(temp)) {
+					if(!pruned.contains(temp)) {
 						successors.add(temp);
-					}
-					else {
-						numTrans++;
 					}
 				
 				}
@@ -220,11 +230,8 @@ public class TerminatorTwo {
 			for(int i=0; i<64; i++) {
 				if(s.board[i] == 0) {
 					GameBoardTwo temp = new GameBoardTwo(s,player,i);
-					if(!transpositions.contains(temp)) {
+					if(!pruned.contains(temp)) {
 						successors.add(temp);
-					}
-					else {
-						numTrans++;
 					}
 				}
 			}
