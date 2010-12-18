@@ -1,0 +1,9 @@
+Four-in-a-row TicTacToe
+//----------------------
+
+Evaluator.java      				: This is a class with static methods for evaluating the positions in the game
+GameBoardTwo.java   				: This class is used to represent a state or "move" in a game
+GameBoardTwoComparator.java 		: A class used by java to sort lists of GameBoardTwo Objects
+ReverseGameBoardTwoComparator.java  : A class used by java to sort in the opposite order
+TerminatorTwo.java					: This is the actual AI in the game. It employs a mini-max search with alpha beta pruning.
+TicTacToe.java						: This class facilitates the game play.
